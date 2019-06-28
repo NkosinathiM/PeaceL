@@ -5,7 +5,7 @@
             [compojure.route :refer [not-found]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
-            [todo_list.mydb :refer :all]
+            [todo-list.mydb :refer :all]
 ))
 
 
@@ -14,6 +14,24 @@
    [request]                                                                                                           (html [:h1 " Hello Good Human"]
           [:ul [:li "Huslte in the rain like no one is watching"]                       
                      [:li "Get this bread no matter what"]]))                                                                                                    
+(comment 
+
+(defn songs 
+
+  [request]
+
+  {:satus  200
+   :body   (html 
+             [:h1 "Top Five Avicii Tracks"] 
+             [:ul [:li (nth (todo-list.mydb/thesongs) 1 )]
+                  [:li (nth (todo-list.mydb/thesongs) 2 )]
+                  [:li (nth (todo-list.mydb/thesongs) 3 )]
+                  [:li (nth (todo-list.mydb/thesongs) 4 )]
+                  [:li (nth (todo-list.mydb/thesongs) 5 )]]
+            )
+   :headers {}})
+
+)
 
 (defn goodbye
    "A route for goodbye"
@@ -24,7 +42,7 @@
 
 (defn about 
   "It gives you info about the prog."
-  [request]
+   [request]
   {:status 200
    :body "<h1>Nkosinathi's simple web service, not bad...</h1>"
    :headers {}})
@@ -49,9 +67,12 @@
 
 (defn calculator
   "Gives a calculated result from the request's parameters"
+
   [request]
- (let [a  (Integer. (get-in request [:route-params :a]))
-       b  (Integer. (get-in request [:route-params :b]))
+
+
+ (let [a  (Integer/parseInt (get-in request [:route-params :a]))
+       b  (Integer/parseInt (get-in request [:route-params :b]))
        op (get-in request [:route-params :op])  
        the_op (get operators op)]
       
@@ -65,6 +86,17 @@
      :body "I am not farmiliar with that operand. Try +,-,* or /"
      :headers {}})))
 
+(defn songs 
+  "Gets your top five songs from the database."
+
+  [request]
+
+  (html 
+         [:h2 "Top Five Avicii Tracks"] 
+         [:h1 (todo-list.mydb/thesongs)]
+            ))
+
+
 
 (defroutes app
 
@@ -74,6 +106,7 @@
   (GET "/req-info" [] req-info)
   (GET "/hello/:name" [] hello)
   (GET "/calculator/:op/:a/:b" [] calculator)
+  (GET "/songs" [] songs)
   (not-found  "<h1>This is not the page you are looking for</h1>
             <p>Sorry, the page you requested was not found!</p>")) 
 
@@ -85,7 +118,7 @@
 
   (jetty/run-jetty 
    app
-   {:port (Integer. pn)})
+   {:port (Integer/parseInt pn)})
   )
 
 (defn -dev-main
@@ -94,8 +127,5 @@
 
   (jetty/run-jetty 
    (wrap-reload #'app) ; Skip the evaluation of the function and use the name instead
-   {:port (Integer. pn)})
+   {:port (Integer/parseInt pn)})
   )
-
-
-
