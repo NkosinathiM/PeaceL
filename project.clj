@@ -11,7 +11,11 @@
                  [ring "1.7.1"]
                  [compojure "1.3.4"]
                  [hiccup "1.0.5"]
-                 [com.datomic/client-pro "0.8.28"]]
+                 [com.datomic/datomic-pro "0.9.5786"]]
+
+
+  :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
+                                   :creds :gpg}}
   
   :min-lein-version "2.0.0"
 

@@ -1,7 +1,6 @@
 (ns todo-list.core
   (:require [ring.adapter.jetty :as jetty]
-            [ring.middleware.reload :refer [wrap-reload]] ;push all our code changes to the application each time we save
-            [compojure.core :refer [defroutes GET]]
+            [ring.middleware.reload :refer [wrap-reload]]
             [compojure.route :refer [not-found]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
@@ -22,7 +21,7 @@
 
   {:satus  200
    :body   (html 
-             [:h1 "Top Five Avicii Tracks"] 
+             [":h1 Hello, here is your to do list for today: "] 
              [:ul [:li (nth (todo-list.mydb/thesongs) 1 )]
                   [:li (nth (todo-list.mydb/thesongs) 2 )]
                   [:li (nth (todo-list.mydb/thesongs) 3 )]
@@ -68,6 +67,7 @@
 (defn calculator
   "Gives a calculated result from the request's parameters"
 
+
   [request]
 
 
@@ -86,14 +86,14 @@
      :body "I am not farmiliar with that operand. Try +,-,* or /"
      :headers {}})))
 
-(defn songs 
-  "Gets your top five songs from the database."
+(defn tasks 
+  "Gets your priority task list from the database."
 
   [request]
 
   (html 
-         [:h2 "Top Five Avicii Tracks"] 
-         [:h1 (todo-list.mydb/thesongs)]
+         [:h2 "Hello, here is your to do list for today:"] 
+         [:h1 (todo-list.mydb/thetasks)]
             ))
 
 
