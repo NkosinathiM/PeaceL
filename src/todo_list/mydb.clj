@@ -38,7 +38,7 @@
                      :task/type   "School"
                      :task/estimate    60}
 
-                   { :task/name   "Write interceptor"
+                   { :task/name   "Code interceptor"
                      :task/type   "Work"
                      :task/estimate    120} 
 

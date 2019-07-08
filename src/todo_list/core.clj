@@ -1,6 +1,7 @@
 (ns todo-list.core
   (:require [ring.adapter.jetty :as jetty]
             [ring.middleware.reload :refer [wrap-reload]]
+            [compojure.core :refer [defroutes GET]]
             [compojure.route :refer [not-found]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
@@ -13,24 +14,6 @@
    [request]                                                                                                           (html [:h1 " Hello Good Human"]
           [:ul [:li "Huslte in the rain like no one is watching"]                       
                      [:li "Get this bread no matter what"]]))                                                                                                    
-(comment 
-
-(defn songs 
-
-  [request]
-
-  {:satus  200
-   :body   (html 
-             [":h1 Hello, here is your to do list for today: "] 
-             [:ul [:li (nth (todo-list.mydb/thesongs) 1 )]
-                  [:li (nth (todo-list.mydb/thesongs) 2 )]
-                  [:li (nth (todo-list.mydb/thesongs) 3 )]
-                  [:li (nth (todo-list.mydb/thesongs) 4 )]
-                  [:li (nth (todo-list.mydb/thesongs) 5 )]]
-            )
-   :headers {}})
-
-)
 
 (defn goodbye
    "A route for goodbye"
@@ -86,6 +69,10 @@
      :body "I am not farmiliar with that operand. Try +,-,* or /"
      :headers {}})))
 
+(def mylist
+
+(todo-list.mydb/thetasks))
+
 (defn tasks 
   "Gets your priority task list from the database."
 
@@ -93,10 +80,32 @@
 
   (html 
          [:h2 "Hello, here is your to do list for today:"] 
-         [:h1 (todo-list.mydb/thetasks)]
+         [:table    
+                  [:tr [:th "Name"]
+                       [:th "Type"]
+                       [:th "Estimate (mins)"]]
+                  [:tr [:th (get-in mylist [0 0])]
+                       [:th (get-in mylist [0 1])]
+                       [:th (get-in mylist [0 2])]
+                       ]
+                  [:tr [:th (get-in mylist [1 0])]
+                       [:th (get-in mylist [1 1])]
+                       [:th (get-in mylist [1 2])]
+                       ]
+                  [:tr [:th (get-in mylist [2 0])]
+                       [:th (get-in mylist [2 1])]
+                       [:th (get-in mylist [2 2])]
+                       ]
+                  [:tr [:th (get-in mylist [3 0])]
+                       [:th (get-in mylist [3 1])]
+                       [:th (get-in mylist [3 2])]
+                       ]
+                     ]
             ))
 
 
+
+;---------------------------------------------------------------------------
 
 (defroutes app
 
@@ -106,7 +115,7 @@
   (GET "/req-info" [] req-info)
   (GET "/hello/:name" [] hello)
   (GET "/calculator/:op/:a/:b" [] calculator)
-  (GET "/songs" [] songs)
+  (GET "/mytasks" [] tasks)
   (not-found  "<h1>This is not the page you are looking for</h1>
             <p>Sorry, the page you requested was not found!</p>")) 
 
