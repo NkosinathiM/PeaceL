@@ -14,17 +14,17 @@
 (def topfive-schema [{:db/ident :task/name
                            :db/valueType :db.type/string
                            :db/cardinality :db.cardinality/one
-                           :db/doc "The title of the track"}
+                           :db/doc "The name of the task."}
 
                           {:db/ident :task/type
                            :db/valueType :db.type/string
                            :db/cardinality :db.cardinality/one
-                           :db/doc "The genre of the track"}
+                           :db/doc "The type of task (home, work or school)"}
 
                            {:db/ident :task/estimate
                            :db/valueType :db.type/long
                            :db/cardinality :db.cardinality/one
-                           :db/doc "The year it was released"}])
+                           :db/doc "The time estimation of how it could take to complete."}])
 
 
 ; The transaction will take a connection and a map of data. 
