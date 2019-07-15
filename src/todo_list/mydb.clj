@@ -3,13 +3,18 @@
 
 ;; Connection to the database hello
 
+;; This is a constant so use DB_URI
 (def db-uri "datomic:mem://hello")
-  
+
+;; This, as well as your transacting below, should be moved into some kind of init function that you
+;; call from your main function **once** as the app boots
 (d/create-database db-uri)
 
-(let [conn (d/connect db-uri) ]
+;; Put stuff like this in a comment block so it doesn't run every time this NS is loaded
+(comment
+  (let [conn (d/connect db-uri)]
     (d/basis-t (d/db conn))
-)
+    ))
 
 (def topfive-schema [{:db/ident :task/name
                            :db/valueType :db.type/string
@@ -45,10 +50,13 @@
                    { :task/name   "Buy fertilizer"
                      :task/type   "Home chore"
                      :task/estimate    30} 
-                                      ]) 
+                                      ])
 
+;; Again only run this once at boot
 (d/transact (d/connect db-uri) topfive-tasks)
 
+;; Ideally you don't want global references like this but dealing with that is maybe
+;; something to tackle another day
 (def db (d/db (d/connect db-uri)))
 
 (def our-tasks  '[:find ?name ?type ?estimate
