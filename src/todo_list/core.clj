@@ -7,7 +7,8 @@
     ;; Pretty much never use :refer :all, and only use :refer for things used all the time
             [hiccup.core :refer [html]]
             [hiccup.page :refer [html5]]
-            [todo-list.mydb :refer :all]))
+            [todo-list.mydb :refer :all]
+            [todo-list.diff :refer :all]))
 
 (defn the-handler
   "When you send a request to the webapp, the ring adaptor (-main) converts
@@ -25,64 +26,44 @@
               [:li "Huslte in the rain like no one is watching"]
               [:li "Get this bread no matter what"]])})
 
-;; You can also make a convenience function to wrap responses in a map
+
 (defn html-response
+  "Wraps responses in a map "
   [body]
   (-> {:status 200
        :body   body}
       ;; You should also include the content type
       (resp/content-type "application/html")))
 
-(defn goodbye
-  "A route for goodbye"
+(defn thediff
+  "Route for differenting"
   [_request]
   (html-response
-    (html5
-      [:h1 "Thank you so much for your visit."]
-      [:p "We are very grateful of your presence!!"])))
+    (html5 
+     [:h1 "Your differentiated univariate polynomial is:"]
+     [:p (todo-list.diff/differentiator _request)])))
 
-;; Will leave you to fix the rest
-
-(defn about
-  "It gives you info about the prog."
-  [_request]
-  {:status 200
-   :body   "<h1>Nkosinathi's simple web service, not bad...</h1>"
-   ;; Don't need the empty headers map
-   })
 
 (defn req-info
   "Gives you information about the request that has been sent"
-  [request]
+  [_request]
   ;; This won't be valid HTML but will contain characters that may confuse the browser.
   ;; Explicitly set the content-type in this case
   (-> {:status 200
-       :body   (pr-str request)}
+       :body   (pr-str _request)}
       (resp/content-type "text/plain")))
 
-(defn hello
-  "Takes in a name from the request and display a personalised message"
-  [request]
-  ;; `name` is a core function that turns keywords into strings eg `(name :ok)` => "ok"
-  ;; Never shadow core bindings in a `let` or anywhere else.  Change to `user-name`
-  (let [user-name (get-in request [:route-params :name])]
-    {:status  200
-     ;; This body isn't a valid HTML response so should either make it one
-     ;; or set content type to plain text.  You could also tidy up with `format`
-     ;:body    (str "Hello, " user-name ". How are you today ?")
-     :body    (format "Hello, %s.  How are you today?" user-name)
-     :headers {}}))
 
 ;; For constants like this we often use SCREAMING_SNAKE_CASE
 (def OPERATORS {"+" + "-" - ":" / "*" *})
 
 (defn calculator
   "Gives a calculated result from the request's parameters"
-  [request]
+  [_request]
   ;; You could/should add error handling here
-  (let [a (Integer/parseInt (get-in request [:route-params :a]))
-        b (Integer/parseInt (get-in request [:route-params :b]))
-        op (get-in request [:route-params :op])
+  (let [a (Integer/parseInt (get-in _request [:route-params :a]))
+        b (Integer/parseInt (get-in _request [:route-params :b]))
+        op (get-in _request [:route-params :op])
         ;; Always use kebab-case in clojure, never snake_case (except for contstants)
         ; the_op (get OPERATORS op)
         the-op (get OPERATORS op)
@@ -159,11 +140,9 @@
 (defroutes app
 
            (GET "/" [] the-handler)
-           (GET "/goodbye" [] goodbye)
-           (GET "/about" [] about)
            (GET "/req-info" [] req-info)
-           (GET "/hello/:name" [] hello)
            (GET "/calculator/:op/:a/:b" [] calculator)
+           (GET "/diff/*args" [] thediff )
            (GET "/mytasks" [] tasks)
            (not-found "<h1>This is not the page you are looking for</h1>
             <p>Sorry, the page you requested was not found!</p>"))
