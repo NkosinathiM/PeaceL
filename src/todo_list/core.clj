@@ -1,7 +1,6 @@
 (ns todo-list.core
   (:require [ring.middleware.reload :refer [wrap-reload]]
             [ring.util.response :as resp]
-    ;; Pretty much never use :refer :all, and only use :refer for things used all the time
             [hiccup.core :refer [html]]
             [hiccup.page :refer [html5]]
             [todo-list.mydb :refer :all]
@@ -14,17 +13,18 @@
   "When you send a request to the webapp, the ring adaptor (-main) converts
    the request to a map and sends it to the specified handler. This the handler
    functyion that takes the request map as its argument and returns a response map. "
-  ;; If you don't use a binding but want to name it so you know what it is, prefix it with a _ as below.
-  ;; If you don't care what it is, just use an _
+  
   [_request]
-  ;; `hiccup.core/html` generates a plain HTML string, to wrap the whole thing in a valid
-  ;; page use `hiccup.page/html5` and put in a response map
+  
+  
   {:status 200
    :body   (html5 {}
-             [:h1 " Hello Good Human"]
-             [:ul
-              [:li "Huslte in the rain like no one is watching"]
-              [:li "Get this bread no matter what"]])})
+             [:h1 " Hello there"]
+             
+             [:div {:style "margin-bottom:1em;background-color:#cccccc; border-radius:1em;padding:1em;font-size: 20px"}
+              [:ul
+               [:li "We have a basic calculator here that can be accessed via <b>`/calculator/operator/first-digit/second-digit`</b>"]
+               [:li "We also have a differentiator that can does your univariate polynomial differention, which can be accessed via <b>`/diff/first-variable/second-variable`</b>"]]])})
 
 
 (defn html-response
@@ -32,28 +32,28 @@
   [body]
   (-> {:status 200
        :body   body}
-      ;; You should also include the content type
+      
       (resp/content-type "text/html")))
 
 (defn thediff
   "Route for differenting"
   [request]
+  ;(println thediff)
   (html-response
     (html5 {}
      [:h1 "Your differentiated univariate polynomial is:"]
-     [:p (todo-list.diff/differentiator request)])))
+     [:div {:style "margin-bottom:1em;background-color:#cccccc; border-radius:1em;padding:1em;font-size: 30px"} 
+      [:p (todo-list.diff/differentiator request)]])))
 
 (defn req-info
   "Gives you information about the request that has been sent"
   [_request]
-  ;; This won't be valid HTML but will contain characters that may confuse the browser.
-  ;; Explicitly set the content-type in this case
   (-> {:status 200
        :body   (pr-str _request)}
       (resp/content-type "text/plain")))
 
 
-;; For constants like this we often use SCREAMING_SNAKE_CASE
+
 (def OPERATORS {"+" + "-" - ":" / "*" *})
 
 (defn calculator
@@ -70,14 +70,10 @@
         ]
     ;; Neither of these responses are valid HTML or set to plain text
     (if the-op
-      {:status  200
-       :body    (str "Your result: " (the-op a b))
-       :headers {}}
-      ;; Technically the correct error code for this is 400 (Bad Request) not 404 (Not Found)
-      ;; see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
-      {:status  400
-       :body    "I am not farmiliar with that operand. Try +,-,* or /"
-       :headers {}})))
+      (html-response (html5 (str "Your result: " (the-op a b))))
+      (html-response (html5 ("I am not farmiliar with that operand. Try +,-,* or /")))  
+     
+)))
 
 ;; You shouldn't call functions in a `def`.  Loading an application should not cause any code to run
 ;; automatically except for the `-main` function.  You could call this in a `let` block inside the
