@@ -9,9 +9,10 @@
 
   :dependencies [[org.clojure/clojure "1.9.0"] 
                  [ring "1.7.1"]
-                 [compojure "1.3.4"]
                  [hiccup "1.0.5"]
-                 [com.datomic/datomic-pro "0.9.5786"]]
+                 [com.datomic/datomic-pro "0.9.5786"]
+                 [bidi "2.1.6"]
+                 [http-kit "2.3.0"]]
 
 
   :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"

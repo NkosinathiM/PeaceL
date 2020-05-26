@@ -1,14 +1,14 @@
 (ns todo-list.core
-  (:require [ring.adapter.jetty :as jetty]
-            [ring.middleware.reload :refer [wrap-reload]]
+  (:require [ring.middleware.reload :refer [wrap-reload]]
             [ring.util.response :as resp]
-            [compojure.core :refer [defroutes GET]]
-            [compojure.route :refer [not-found]]
     ;; Pretty much never use :refer :all, and only use :refer for things used all the time
             [hiccup.core :refer [html]]
             [hiccup.page :refer [html5]]
             [todo-list.mydb :refer :all]
-            [todo-list.diff :refer :all]))
+            [todo-list.diff :refer :all]
+            [bidi.bidi :as bidi]
+            [bidi.ring :as br]
+            [org.httpkit.server :as http]))
 
 (defn the-handler
   "When you send a request to the webapp, the ring adaptor (-main) converts
@@ -33,16 +33,15 @@
   (-> {:status 200
        :body   body}
       ;; You should also include the content type
-      (resp/content-type "application/html")))
+      (resp/content-type "text/html")))
 
 (defn thediff
   "Route for differenting"
-  [_request]
+  [request]
   (html-response
-    (html5 
+    (html5 {}
      [:h1 "Your differentiated univariate polynomial is:"]
-     [:p (todo-list.diff/differentiator _request)])))
-
+     [:p (todo-list.diff/differentiator request)])))
 
 (defn req-info
   "Gives you information about the request that has been sent"
@@ -59,11 +58,12 @@
 
 (defn calculator
   "Gives a calculated result from the request's parameters"
-  [_request]
+  [request]
+  (println calculator)
   ;; You could/should add error handling here
-  (let [a (Integer/parseInt (get-in _request [:route-params :a]))
-        b (Integer/parseInt (get-in _request [:route-params :b]))
-        op (get-in _request [:route-params :op])
+  (let [a (Integer/parseInt (get-in request [:route-params :a]))
+        b (Integer/parseInt (get-in request [:route-params :b]))
+        op (get-in request [:route-params :op])
         ;; Always use kebab-case in clojure, never snake_case (except for contstants)
         ; the_op (get OPERATORS op)
         the-op (get OPERATORS op)
@@ -135,34 +135,53 @@
                             [:td kind]
                             [:td estimate]]))))]))))
 
+(defn not-found
+  [_req]
+  (-> (resp/response
+        (html5 {}
+          [:h1 "This is not the page you are looking for"]
+          [:p "Sorry, the page you requested was not found!"]))
+      (resp/status 404)))
+
 ;---------------------------------------------------------------------------
 
-(defroutes app
+(def ROUTES
+  ["/" [["" {:get ::home}]
+        ["req-info" {:get ::req-info}]
+        [["calculator/" [#"[\+\-\:\*]" :op] "/" [#"\d+" :a] "/" [#"\d+" :b]] {:get ::calculator}]
+        ["mytasks" {:get ::tasks}]
+        [["diff/" [#".+" :poly]] {:get ::diff}]
+        [true ::not-found]]])
 
-           (GET "/" [] the-handler)
-           (GET "/req-info" [] req-info)
-           (GET "/calculator/:op/:a/:b" [] calculator)
-           (GET "/diff/*args" [] thediff )
-           (GET "/mytasks" [] tasks)
-           (not-found "<h1>This is not the page you are looking for</h1>
-            <p>Sorry, the page you requested was not found!</p>"))
+(comment
+  (bidi/match-route ROUTES "/mytasks")
+  (bidi/path-for ROUTES ::calculator :op "+" :a "1" :b "2")
+  (bidi/path-for ROUTES ::diff :args "1/2/")
+  )
+
+(def HANDLERS
+  {::home       the-handler
+   ::req-info   req-info
+   ::calculator calculator
+   ::diff       thediff
+   ::tasks      tasks
+   ::not-found  not-found})
+
+(def app-handler
+  (br/make-handler ROUTES (fn [handler] (get HANDLERS handler))))
 
 (defn -main
   "The -main function takes a port number as an argument which we pass when running the application. 
   The Ring Jetty adaptor is used to run an instance of Jetty. 
   The -main function contains an anonymous function that takes any request and returns a response map."
   [pn]                                                      ;The port number
-
-  (jetty/run-jetty
-    app
-    {:port (Integer/parseInt pn)})
-  )
+  (http/run-server app-handler
+                   {:port (Integer/parseInt pn)}))
 
 (defn -dev-main
   "This one allows us to make changes and save then it pushes all those to the server."
   [pn]                                                      ;The port number
 
-  (jetty/run-jetty
-    (wrap-reload #'app)                                     ; Skip the evaluation of the function and use the name instead
-    {:port (Integer/parseInt pn)})
-  )
+  (http/run-server (-> #'app-handler
+                       wrap-reload)
+                   {:port (Integer/parseInt pn)}))
